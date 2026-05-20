@@ -1,5 +1,5 @@
 use rig_core::completion::CompletionRequest;
-use rig_core::message::{AssistantContent, Message, ToolCall, UserContent};
+use rig_core::message::{AssistantContent, DocumentSourceKind, Message, ToolCall, UserContent};
 #[cfg(feature = "mtmd")]
 use rig_core::one_or_many::OneOrMany;
 use serde_json::{Value, json};
@@ -52,7 +52,20 @@ pub(crate) fn prepare_request(request: &CompletionRequest) -> Result<PreparedReq
         let doc_text: String = content
             .iter()
             .filter_map(|c| match c {
-                UserContent::Text(t) => Some(t.text.as_str()),
+                UserContent::Text(t) => {
+                    Some(t.text.as_str())
+                },
+                UserContent::Document(t) => {
+                    Some(match &t.data {
+                        DocumentSourceKind::Url(text) => {text.as_str()}
+                        DocumentSourceKind::Base64(text) => {text.as_str()}
+                        DocumentSourceKind::FileId(text) => {text.as_str()}
+                        DocumentSourceKind::Raw(bytes) => {std::str::from_utf8(bytes).unwrap_or("")}
+                        DocumentSourceKind::String(text) => {text.as_str()}
+                        DocumentSourceKind::Unknown => {""}
+                        _ => {""}
+                    })
+                }
                 _ => None,
             })
             .collect::<Vec<_>>()
