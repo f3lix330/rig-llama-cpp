@@ -1,5 +1,5 @@
-use rig::agent::{FinalResponse, MultiTurnStreamItem, StreamingResult, Text};
-use rig::streaming::StreamedAssistantContent;
+use rig_core::agent::{FinalResponse, MultiTurnStreamItem, StreamingResult, Text};
+use rig_core::streaming::StreamedAssistantContent;
 use tokio_stream::StreamExt;
 
 /// Helper function to stream a completion request to stdout.
