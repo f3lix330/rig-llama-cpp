@@ -1,3 +1,4 @@
+use llama_cpp_2::model::params::FitError;
 use crate::error::LoadError;
 use crate::types::{FitParams, KvCacheParams};
 
@@ -71,6 +72,11 @@ pub(crate) fn fit_and_load_model(
     };
 
     log::info!("Fitting model parameters for {model_path}...");
+    log::info!("Using Cstring: {:?}, cparams: {:?}, margins: {:?}, fit: {:?}",
+    model_cstr,
+    cparams,
+    margins,
+    fit.n_ctx_min);
 
     let fit_result = pinned_params
         .as_mut()
@@ -81,7 +87,16 @@ pub(crate) fn fit_and_load_model(
             fit.n_ctx_min,
             log_level,
         )
-        .map_err(|e| LoadError::Fit(e.to_string()))?;
+        .map_err(|e| {
+            match e {
+                FitError::Failure => {
+                    LoadError::Fit(format!("Failure: {e}"))
+                }
+                FitError::Error => {
+                    LoadError::Fit(format!("Error: {e}"))
+                }
+            }
+        })?;
 
     let actual_n_ctx = fit_result.n_ctx;
 
